@@ -1,3 +1,7 @@
+
+import os
+os.makedirs("logs", exist_ok=True)
+
 from logic import check_winner
 
 def get_empty_board():
@@ -28,6 +32,7 @@ if __name__ == '__main__':
     current_player = 'X'
     board = get_empty_board()
     max_moves = len(board) * len(board)
+
 
     while True:
             print_board(board)
