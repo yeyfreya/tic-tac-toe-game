@@ -41,7 +41,9 @@ class TicTacToe:
         print("-------------")
 
     def switch_player(self):
+        print("Switching players")
         self.current_player, self.opponent = self.opponent, self.current_player
+        print(f"Current player: {self.current_player.get_symbol()}, Opponent: {self.opponent.get_symbol()}")
 
     def get_player_input(self):
         if self.current_player.is_human():
@@ -72,6 +74,10 @@ class TicTacToe:
     def mark_board(self, row, col):
         if self.board[row][col] is None:
             self.board[row][col] = self.current_player.get_symbol()
+            self.winner = self.check_winner()  # Check for a winner after marking the board
+
+            if not self.winner:
+                self.switch_player()  # Switch to the next player if there is no winner
         else:
             print("Spot is already occupied, try again")
 
@@ -94,8 +100,11 @@ class TicTacToe:
             return self.current_player
 
         flat_board = [cell for row in self.board for cell in row]
-        if None not in flat_board:
-            return None  # No winner or draw yet
+
+        if not None in flat_board:
+            return "Draw"  # No winner or draw yet
+        
+
 
 
     def is_board_full(self):
@@ -121,7 +130,8 @@ class TicTacToe:
                 print("It's a draw!")
                 break
 
-            self.switch_player()
+            # if self.winner is None:  # Switch players only if there is no winner
+            #     self.switch_player()
 
 
 if __name__ == '__main__':
@@ -130,15 +140,22 @@ if __name__ == '__main__':
     num_players = input("Enter the number of players (1 or 2): ")
 
     # Choose player
-    symbol1 = input("Enter symbol for Player 1 (e.g., X): ")
+    symbol1 = input("Enter symbol for Player 1 (X or O): ")
 
     # Player 1 is a human player
     player1 = Player(symbol1)
     
     if num_players == '2':
-        symbol2 = input("Enter symbol for Player 2 (e.g., O): ")
-        # Player 2 is a human player
+         # Player 2 is a human player
+        if player1.get_symbol() == "X":
+            symbol2 = "O"
+            print(f"Player 2 is assigned {symbol2}.")
+        else:
+            symbol2 = "X"
+            print(f"Player 2 is assigned {symbol2}.")
+        
         player2 = Player(symbol2)
+
     else:
         # Player 2 is a bot player
         player2 = Player("O", human=False)
