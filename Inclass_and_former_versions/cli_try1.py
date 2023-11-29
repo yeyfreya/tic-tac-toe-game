@@ -1,7 +1,9 @@
 
 import random
 import csv
-from datetime import datetime
+import os
+import datetime
+from datetime import timedelta
 
 class Player:
     def __init__(self, symbol, human=True):
@@ -21,8 +23,10 @@ class TicTacToe:
         self.current_player = player1
         self.opponent = player2
         self.winner = None
-        self.start_time = datetime.now()  # Record the start time
-        self.moves = 0
+        self.moves = []  # List to store game moves
+        self.start_time = datetime.datetime.now()
+        self.game_id = self.start_time.strftime("%Y%m%d%H%M%S")  # Unique game ID based on start time
+
 
     def get_empty_board(self):
         return [
@@ -77,11 +81,29 @@ class TicTacToe:
 
     def mark_board(self, row, col):
         if self.board[row][col] is None:
+            move_start_time = datetime.datetime.now()
+
+            move_data = {
+                "game_id": self.game_id,
+                "player": self.current_player.get_symbol(),
+                "move_start_time": move_start_time,
+                "row": row,
+                "col": col,
+            }
+
+            self.moves.append(move_data)
+
             self.board[row][col] = self.current_player.get_symbol()
-            self.winner = self.check_winner()  # Check for a winner after marking the board
+            self.winner = self.check_winner()
+
+            move_end_time = datetime.datetime.now()
+            move_duration = move_end_time - move_start_time
+
+            move_data["move_end_time"] = move_end_time
+            move_data["move_duration"] = move_duration
 
             if not self.winner:
-                self.switch_player()  # Switch to the next player if there is no winner
+                self.switch_player()
         else:
             print("Spot is already occupied, try again")
 
@@ -121,54 +143,63 @@ class TicTacToe:
         while self.winner is None and max_moves != 0:
             self.print_board()
             row, col = self.get_player_input()
+            
+            move_start_time = datetime.datetime.now()
             self.mark_board(row, col)
+            move_end_time = datetime.datetime.now()
+            move_duration = move_end_time - move_start_time
 
             self.winner = self.check_winner()
             max_moves -= 1
-            self.moves += 1  # Increment move count
 
             if self.winner:
                 self.print_board()
                 print(f"Player {self.current_player.get_symbol()} wins!")
-                self.end_game()
+                self.save_to_log(outcome="win")  # Save game data to log file with outcome
             elif max_moves == 0:
                 self.print_board()
                 print("It's a draw!")
-                self.end_game()
+                self.save_to_log(outcome="draw")  # Save game data to log file with outcome
+                break
 
-    def end_game(self):
-        end_time = datetime.now()
+            # After the game ends
+        end_time = datetime.datetime.now()
         duration = end_time - self.start_time
+        result = "Draw" if self.winner == "Draw" else f"Player {self.winner.get_symbol()} wins!"
 
-        game_id = self.start_time.strftime("%Y%m%d%H%M%S")  # Use start time as game id
-        result = {
-            'GameID': game_id,
-            'StartTime': self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            'EndTime': end_time.strftime("%Y-%m-%d %H:%M:%S"),
-            'Duration': duration.total_seconds(),
-            'Moves': self.moves,
-            'Winner': self.winner.get_symbol() if isinstance(self.winner, Player) else "Draw",  # Use "Draw" for draws
+        game_data = {
+            "game_id": self.game_id,
+            "start_time": self.start_time,
+            "end_time": end_time,
+            "duration": duration,
+            "moves": len(self.moves),
+            "result": result,
         }
 
-        self.record_game(result)
+        self.save_to_log(game_data)  # Save game data to log file
 
-    def record_game(self, result):
-        log_file = 'logs/tictactoe_log.csv'
+    def save_to_log(self, game_data):
+        log_dir = "logs"
+        os.makedirs(log_dir, exist_ok=True)
 
-        try:
-            with open(log_file, 'a', newline='') as csvfile:
-                fieldnames = ['GameID', 'StartTime', 'EndTime', 'Duration', 'Moves', 'Winner']
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        log_file = os.path.join(log_dir, "game_log.csv")
 
-                if csvfile.tell() == 0:  # If the file is empty, write the header
-                    writer.writeheader()
+        # Open the file in append mode
+        with open(log_file, mode="a", newline="") as file:
+            fieldnames = ["game_id", "start_time", "end_time", "duration", "moves", "result"]
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
 
-                writer.writerow(result)
-        except Exception as e:
-            print(f"Error recording game: {e}")
+            # Write data to the file
+            if file.tell() == 0:  # Check if the file is empty
+                writer.writeheader()  # Write header only if the file is empty
+
+            writer.writerow(game_data)
+
+    
 
 
 if __name__ == '__main__':
+
     # Check how many players
     num_players = input("Enter the number of players (1 or 2): ")
 
@@ -177,16 +208,16 @@ if __name__ == '__main__':
 
     # Player 1 is a human player
     player1 = Player(symbol1)
-
+    
     if num_players == '2':
-        # Player 2 is a human player
+         # Player 2 is a human player
         if player1.get_symbol() == "X":
             symbol2 = "O"
             print(f"Player 2 is assigned {symbol2}.")
         else:
             symbol2 = "X"
             print(f"Player 2 is assigned {symbol2}.")
-
+        
         player2 = Player(symbol2)
 
     else:

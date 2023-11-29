@@ -1,7 +1,5 @@
 
 import random
-import csv
-from datetime import datetime
 
 class Player:
     def __init__(self, symbol, human=True):
@@ -21,8 +19,6 @@ class TicTacToe:
         self.current_player = player1
         self.opponent = player2
         self.winner = None
-        self.start_time = datetime.now()  # Record the start time
-        self.moves = 0
 
     def get_empty_board(self):
         return [
@@ -125,50 +121,21 @@ class TicTacToe:
 
             self.winner = self.check_winner()
             max_moves -= 1
-            self.moves += 1  # Increment move count
 
             if self.winner:
                 self.print_board()
                 print(f"Player {self.current_player.get_symbol()} wins!")
-                self.end_game()
             elif max_moves == 0:
                 self.print_board()
                 print("It's a draw!")
-                self.end_game()
+                break
 
-    def end_game(self):
-        end_time = datetime.now()
-        duration = end_time - self.start_time
-
-        game_id = self.start_time.strftime("%Y%m%d%H%M%S")  # Use start time as game id
-        result = {
-            'GameID': game_id,
-            'StartTime': self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            'EndTime': end_time.strftime("%Y-%m-%d %H:%M:%S"),
-            'Duration': duration.total_seconds(),
-            'Moves': self.moves,
-            'Winner': self.winner.get_symbol() if isinstance(self.winner, Player) else "Draw",  # Use "Draw" for draws
-        }
-
-        self.record_game(result)
-
-    def record_game(self, result):
-        log_file = 'logs/tictactoe_log.csv'
-
-        try:
-            with open(log_file, 'a', newline='') as csvfile:
-                fieldnames = ['GameID', 'StartTime', 'EndTime', 'Duration', 'Moves', 'Winner']
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-                if csvfile.tell() == 0:  # If the file is empty, write the header
-                    writer.writeheader()
-
-                writer.writerow(result)
-        except Exception as e:
-            print(f"Error recording game: {e}")
+            # if self.winner is None:  # Switch players only if there is no winner
+            #     self.switch_player()
 
 
 if __name__ == '__main__':
+
     # Check how many players
     num_players = input("Enter the number of players (1 or 2): ")
 
@@ -177,16 +144,16 @@ if __name__ == '__main__':
 
     # Player 1 is a human player
     player1 = Player(symbol1)
-
+    
     if num_players == '2':
-        # Player 2 is a human player
+         # Player 2 is a human player
         if player1.get_symbol() == "X":
             symbol2 = "O"
             print(f"Player 2 is assigned {symbol2}.")
         else:
             symbol2 = "X"
             print(f"Player 2 is assigned {symbol2}.")
-
+        
         player2 = Player(symbol2)
 
     else:
