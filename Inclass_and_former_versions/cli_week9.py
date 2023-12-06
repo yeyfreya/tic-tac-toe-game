@@ -23,7 +23,6 @@ class TicTacToe:
         self.winner = None
         self.start_time = datetime.now()  # Record the start time
         self.moves = 0
-        self.first_player_move = None
 
     def get_empty_board(self):
         return [
@@ -62,8 +61,6 @@ class TicTacToe:
                 col = (cell_number - 1) % 3
 
                 if 1 <= cell_number <= 9 and self.board[row][col] is None:
-                    if self.moves == 0:
-                        self.first_player_move = cell_number
                     return row, col
                 else:
                     print("Invalid input or spot is already occupied, try again")
@@ -112,6 +109,8 @@ class TicTacToe:
             return "Draw"  # No winner or draw yet
         
 
+
+
     def is_board_full(self):
         return all(cell is not None for row in self.board for cell in row)
     
@@ -137,7 +136,6 @@ class TicTacToe:
                 print("It's a draw!")
                 self.end_game()
 
-
     def end_game(self):
         end_time = datetime.now()
         duration = end_time - self.start_time
@@ -149,18 +147,17 @@ class TicTacToe:
             'EndTime': end_time.strftime("%Y-%m-%d %H:%M:%S"),
             'Duration': duration.total_seconds(),
             'Moves': self.moves,
-            'FirstPlayerMove': self.first_player_move,
             'Winner': self.winner.get_symbol() if isinstance(self.winner, Player) else "Draw",  # Use "Draw" for draws
         }
 
         self.record_game(result)
 
     def record_game(self, result):
-        log_file = 'logs/week10_tictactoe_game.csv'
+        log_file = 'logs/tictactoe_log.csv'
 
         try:
             with open(log_file, 'a', newline='') as csvfile:
-                fieldnames = ['GameID', 'StartTime', 'EndTime', 'Duration', 'Moves', 'FirstPlayerMove', 'Winner']
+                fieldnames = ['GameID', 'StartTime', 'EndTime', 'Duration', 'Moves', 'Winner']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
                 if csvfile.tell() == 0:  # If the file is empty, write the header
